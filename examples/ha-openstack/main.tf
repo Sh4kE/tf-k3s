@@ -40,17 +40,18 @@ module "server1" {
 
   name               = "k3s-server-1"
   image_name         = var.image_name
-  flavor_name        = "m1.small"
+  flavor_name        = var.master_flavor_name
   availability_zone  = var.availability_zone
   keypair_name       = openstack_compute_keypair_v2.k3s.name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
-  data_volume_size   = 1
+  data_volume_size   = var.data_volume_size
+  data_volume_type   = var.data_volume_type
   floating_ip_pool   = var.floating_ip_pool
 
   cluster_token          = random_password.cluster_token.result
-  k3s_args                = concat(["server", "--cluster-init"], local.common_k3s_args)
+  k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args)
   bootstrap_token_id     = random_password.bootstrap_token_id.result
   bootstrap_token_secret = random_password.bootstrap_token_secret.result
 }
@@ -58,17 +59,18 @@ module "server1" {
 module "servers" {
   source = "../../k3s-openstack"
 
-  count = 2
+  count = var.server_count
 
   name               = "k3s-server-${count.index + 2}"
   image_name         = var.image_name
-  flavor_name        = "m1.small"
+  flavor_name        = var.masters_flavor_name
   availability_zone  = var.availability_zone
   keypair_name       = openstack_compute_keypair_v2.k3s.name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
-  data_volume_size   = 1
+  data_volume_size   = var.data_volume_size
+  data_volume_type   = var.data_volume_type
 
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
@@ -79,17 +81,18 @@ module "servers" {
 module "agents" {
   source = "../../k3s-openstack"
 
-  count = 1
+  count = var.agent_count
 
   name               = "k3s-agent-${count.index + 1}"
   image_name         = var.image_name
-  flavor_name        = "m1.small"
+  flavor_name        = var.node_flavor_name
   availability_zone  = var.availability_zone
   keypair_name       = openstack_compute_keypair_v2.k3s.name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
-  data_volume_size   = 1
+  data_volume_size   = var.data_volume_size
+  data_volume_type   = var.data_volume_type
 
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
@@ -141,4 +144,8 @@ provider "kubernetes" {
   host                   = module.server1.k3s_url
   token                  = local.token
   cluster_ca_certificate = data.k8sbootstrap_auth.auth.ca_crt
+}
+
+# Configure the OpenStack Provider
+provider "openstack" {
 }
