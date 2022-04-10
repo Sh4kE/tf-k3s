@@ -40,7 +40,7 @@ module "server1" {
 
   name               = "k3s-server-1"
   image_name         = var.image_name
-  flavor_name        = var.master_flavor_name
+  flavor_name        = var.master1_flavor_name
   availability_zone  = var.availability_zone
   keypair_name       = openstack_compute_keypair_v2.k3s.name
   network_id         = var.network_id
