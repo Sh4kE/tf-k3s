@@ -133,21 +133,21 @@ resource "openstack_compute_floatingip_associate_v2" "node" {
   instance_id = openstack_compute_instance_v2.node.id
 }
 
-resource "openstack_networking_floatingip_v2" "k8s_api" {
-  count = var.floating_ip_pool == null ? 0 : 1
-  pool  = var.floating_ip_pool
-}
-
 resource "openstack_lb_loadbalancer_v2" "k8s_api" {
   count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
+
+  name = "K8s Master LB"
   vip_subnet_id = var.subnet_id
+  security_group_ids    = var.security_group_ids
+  admin_state_up = true
 }
 
-// resource "openstack_compute_floatingip_associate_v2" "k8s_api" {
-//   count       = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-//   floating_ip = openstack_networking_floatingip_v2.k8s_api[0].address
-//   instance_id = openstack_lb_loadbalancer_v2.lb_k8s_api.id
-// }
+resource "openstack_networking_floatingip_v2" "k8s_api" {
+  count = var.floating_ip_pool == null ? 0 : 1
+
+  pool  = var.floating_ip_pool
+  port_id = openstack_lb_loadbalancer_v2.k8s_api.vip_port_id
+}
 
 resource "openstack_lb_pool_v2" "k8s_api" {
   count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
