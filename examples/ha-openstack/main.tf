@@ -42,7 +42,7 @@ module "server1" {
   image_name         = var.image_name
   flavor_name        = var.master1_flavor_name
   availability_zone  = var.availability_zone
-  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s.name
+  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
@@ -65,7 +65,7 @@ module "servers" {
   image_name         = var.image_name
   flavor_name        = var.masters_flavor_name
   availability_zone  = var.availability_zone
-  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s.name
+  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
@@ -87,7 +87,7 @@ module "agents" {
   image_name         = var.image_name
   flavor_name        = var.node_flavor_name
   availability_zone  = var.availability_zone
-  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s.name
+  keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
   security_group_ids = [module.secgroup.id]
