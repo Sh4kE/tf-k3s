@@ -75,7 +75,7 @@ module "servers" {
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
-  k3s_args           = concat(["server"], local.common_k3s_args)
+  k3s_args          = concat(["server"], local.common_k3s_args)
 }
 
 module "agents" {
@@ -97,7 +97,7 @@ module "agents" {
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
-  k3s_args           = ["agent", "--node-label", "az=${var.availability_zone}"]
+  k3s_args          = ["agent", "--node-label", "az=${var.availability_zone}"]
 }
 
 output "cluster_token" {

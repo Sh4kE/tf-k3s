@@ -1,5 +1,5 @@
 variable "availability_zone" {
-  type = string
+  type    = string
   default = "nova"
 }
 
@@ -33,7 +33,7 @@ variable "node_flavor_name" {
 }
 
 variable "data_volume_size" {
-  type = number
+  type    = number
   default = 1
 }
 
@@ -42,12 +42,12 @@ variable "data_volume_type" {
 }
 
 variable "server_count" {
-  type = number
+  type    = number
   default = 1
 }
 
 variable "agent_count" {
-  type = number
+  type    = number
   default = 1
 }
 

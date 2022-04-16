@@ -139,7 +139,7 @@ resource "openstack_networking_floatingip_v2" "k8s_api" {
 }
 
 resource "openstack_lb_loadbalancer_v2" "k8s_api" {
-  count       = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
+  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
   vip_subnet_id = var.subnet_id
 }
 
@@ -150,11 +150,11 @@ resource "openstack_lb_loadbalancer_v2" "k8s_api" {
 // }
 
 resource "openstack_lb_pool_v2" "k8s_api" {
-  name = "K8s Master Pool"
-  protocol    = "HTTPS"
-  lb_method   = "ROUND_ROBIN"
+  name            = "K8s Master Pool"
+  protocol        = "HTTPS"
+  lb_method       = "ROUND_ROBIN"
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
-  admin_state_up = true
+  admin_state_up  = true
 
   // listener_id = "d9415786-5f1a-428b-b35f-2f1523e146d2"
 }
@@ -165,23 +165,23 @@ resource "openstack_lb_listener_v2" "k8s_api" {
   protocol_port   = 6443
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   default_pool_id = openstack_lb_pool_v2.k8s_api.id
-  admin_state_up = true
+  admin_state_up  = true
 }
 
 resource "openstack_lb_member_v2" "k8s_api" {
-  pool_id       = openstack_lb_pool_v2.k8s_api.id
-  address       = var.k3s_ip
-  protocol_port = 6443
+  pool_id        = openstack_lb_pool_v2.k8s_api.id
+  address        = var.k3s_ip
+  protocol_port  = 6443
   admin_state_up = true
 }
 
 resource "openstack_lb_monitor_v2" "k8s_api" {
-  name        = "K8s Master Health Monitor"
-  pool_id     = openstack_lb_pool_v2.k8s_api.id
-  type        = "TLS-HELLO"
-  delay       = 5
-  timeout     = 5
-  max_retries = 3
+  name           = "K8s Master Health Monitor"
+  pool_id        = openstack_lb_pool_v2.k8s_api.id
+  type           = "TLS-HELLO"
+  delay          = 5
+  timeout        = 5
+  max_retries    = 3
   admin_state_up = true
 }
 
