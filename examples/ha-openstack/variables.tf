@@ -50,3 +50,8 @@ variable "agent_count" {
   type = number
   default = 1
 }
+
+variable "keypair_name" {
+  type    = string
+  default = null
+}
