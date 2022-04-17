@@ -21,6 +21,8 @@ variable "allow_remote_prefix_v6" {
 }
 
 variable "port_ssh" { default = 22 }
+variable "port_http" { default = 80 }
+variable "port_https" { default = 443 }
 variable "port_api" { default = 6443 }
 variable "port_node_tcp_min" { default = 30000 }
 variable "port_node_tcp_max" { default = 32767 }

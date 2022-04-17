@@ -46,6 +46,26 @@ resource "openstack_networking_secgroup_rule_v2" "ssh" {
   security_group_id = local.security_group_id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "http" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_http
+  port_range_max    = var.port_http
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "https" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_https
+  port_range_max    = var.port_https
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
 resource "openstack_networking_secgroup_rule_v2" "kubernetes_api" {
   direction         = "ingress"
   ethertype         = "IPv4"
