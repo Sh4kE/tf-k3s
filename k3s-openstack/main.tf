@@ -133,75 +133,10 @@ resource "openstack_compute_floatingip_associate_v2" "node" {
   instance_id = openstack_compute_instance_v2.node.id
 }
 
-resource "openstack_lb_loadbalancer_v2" "k8s_api" {
-  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-
-  name = "K8s Master LB"
-  vip_subnet_id = var.subnet_id
-  security_group_ids    = var.security_group_ids
-  admin_state_up = true
-}
-
-resource "openstack_networking_floatingip_v2" "k8s_api" {
-  count = var.floating_ip_pool == null ? 0 : 1
-
-  pool  = var.floating_ip_pool
-}
-
-resource "openstack_networking_floatingip_associate_v2" "floatip_1" {
-  count = var.floating_ip_pool == null ? 0 : 1
-
-  floating_ip = openstack_networking_floatingip_v2.k8s_api[0].address
-  port_id = openstack_lb_loadbalancer_v2.k8s_api[0].vip_port_id
-}
-
-resource "openstack_lb_pool_v2" "k8s_api" {
-  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-
-  name            = "K8s Master Pool"
-  protocol        = "HTTPS"
-  lb_method       = "ROUND_ROBIN"
-  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api[0].id
-  admin_state_up  = true
-}
-
-resource "openstack_lb_listener_v2" "k8s_api" {
-  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-
-  name            = "K8s Master Listener"
-  protocol        = "HTTPS"
-  protocol_port   = 6443
-  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api[0].id
-  default_pool_id = openstack_lb_pool_v2.k8s_api[0].id
-  admin_state_up  = true
-}
-
-resource "openstack_lb_member_v2" "k8s_api" {
-  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-
-  name           = var.name
-  pool_id        = openstack_lb_pool_v2.k8s_api[0].id
-  address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
-  protocol_port  = 6443
-  admin_state_up = true
-}
-
-resource "openstack_lb_monitor_v2" "k8s_api" {
-  count         = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? 1 : 0
-
-  name           = "K8s Master Health Monitor"
-  pool_id        = openstack_lb_pool_v2.k8s_api[0].id
-  type           = "TLS-HELLO"
-  delay          = 5
-  timeout        = 5
-  max_retries    = 3
-  admin_state_up = true
-}
-
 locals {
   node_ip          = openstack_compute_instance_v2.node.network.0.fixed_ip_v4
   node_ipv6        = openstack_compute_instance_v2.node.network.0.fixed_ip_v6
-  node_external_ip = length(openstack_networking_floatingip_v2.k8s_api) > 0 ? openstack_networking_floatingip_v2.k8s_api[0].address : null
+  node_external_ip = var.k3s_external_ip
   k3s_url          = var.k3s_join_existing ? var.k3s_url : "https://${local.node_ip}:6443"
   k3s_external_url = (var.k3s_join_existing || local.node_external_ip == null) ? "" : "https://${local.node_external_ip}:6443"
 }

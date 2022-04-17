@@ -35,6 +35,12 @@ data "k8sbootstrap_auth" "auth" {
   token  = local.token
 }
 
+module "floating-ip-master-lb" {
+  source = "../../k3s-openstack/floating-ip"
+
+  floating_ip_pool = var.floating_ip_pool
+}
+
 module "server1" {
   source = "../../k3s-openstack"
 
@@ -49,6 +55,7 @@ module "server1" {
   data_volume_size   = var.data_volume_size
   data_volume_type   = var.data_volume_type
   floating_ip_pool   = var.floating_ip_pool
+  k3s_external_ip    = module.floating-ip-master-lb.floating_ip
 
   cluster_token          = random_password.cluster_token.result
   k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args)
@@ -71,6 +78,7 @@ module "servers" {
   security_group_ids = [module.secgroup.id]
   data_volume_size   = var.data_volume_size
   data_volume_type   = var.data_volume_type
+  k3s_external_ip    = module.floating-ip-master-lb.floating_ip
 
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
@@ -98,6 +106,17 @@ module "agents" {
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
   k3s_args          = ["agent", "--node-label", "az=${var.availability_zone}"]
+}
+
+module "load-balancer" {
+  source = "../../k3s-openstack/load-balancer"
+  floating_ip = module.floating-ip-master-lb.floating_ip
+  subnet_id = var.subnet_id
+  members = {
+    "k3s-server-1" = module.server1.node_ip
+    "k3s-server-2" = module.servers[0].node_ip
+    "k3s-server-3" = module.servers[1].node_ip
+  }
 }
 
 output "cluster_token" {
