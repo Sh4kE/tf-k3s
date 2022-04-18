@@ -1,6 +1,6 @@
-variable "availability_zone" {
-  type    = string
-  default = "nova"
+variable "availability_zones" {
+  type    = list(string)
+  default = ["nova"]
 }
 
 variable "network_id" {

@@ -23,8 +23,7 @@ locals {
   token = "${random_password.bootstrap_token_id.result}.${random_password.bootstrap_token_secret.result}"
   common_k3s_args = [
     "--kube-apiserver-arg", "enable-bootstrap-token-auth",
-    "--disable", "traefik",
-    "--node-label", "az=${var.availability_zone}",
+    "--disable", "traefik"
   ]
 }
 
@@ -47,7 +46,7 @@ module "server1" {
   name               = "k3s-server-1"
   image_name         = var.image_name
   flavor_name        = var.master1_flavor_name
-  availability_zone  = var.availability_zone
+  availability_zone  = var.availability_zones[0]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
@@ -58,7 +57,7 @@ module "server1" {
   k3s_external_ip    = module.floating-ip-master-lb.floating_ip
 
   cluster_token          = random_password.cluster_token.result
-  k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args)
+  k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args, ["--node-label", "az=${var.availability_zones[0]}"])
   bootstrap_token_id     = random_password.bootstrap_token_id.result
   bootstrap_token_secret = random_password.bootstrap_token_secret.result
 }
@@ -71,7 +70,7 @@ module "servers" {
   name               = "k3s-server-${count.index + 2}"
   image_name         = var.image_name
   flavor_name        = var.masters_flavor_name
-  availability_zone  = var.availability_zone
+  availability_zone  = var.availability_zones[count.index + 1 % length(var.availability_zones)]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
@@ -83,7 +82,7 @@ module "servers" {
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
-  k3s_args          = concat(["server"], local.common_k3s_args)
+  k3s_args          = concat(["server"], local.common_k3s_args, ["--node-label", "az=${var.availability_zones[count.index + 1 % length(var.availability_zones)]}"])
 }
 
 module "agents" {
@@ -94,7 +93,7 @@ module "agents" {
   name               = "k3s-agent-${count.index + 1}"
   image_name         = var.image_name
   flavor_name        = var.node_flavor_name
-  availability_zone  = var.availability_zone
+  availability_zone  = var.availability_zones[count.index % length(var.availability_zones)]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
   network_id         = var.network_id
   subnet_id          = var.subnet_id
@@ -105,7 +104,7 @@ module "agents" {
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
-  k3s_args          = ["agent", "--node-label", "az=${var.availability_zone}"]
+  k3s_args          = ["agent", "--node-label", "az=${var.availability_zones[count.index % length(var.availability_zones)]}"]
 }
 
 module "load-balancer" {
