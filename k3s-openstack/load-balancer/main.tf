@@ -11,7 +11,7 @@ resource "openstack_networking_floatingip_associate_v2" "float_ip_association" {
 }
 
 resource "openstack_lb_pool_v2" "k8s_api" {
-  name            = "K8s Master Pool"
+  name            = "K8s Master Pool API"
   protocol        = "HTTPS"
   lb_method       = "ROUND_ROBIN"
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
@@ -19,8 +19,16 @@ resource "openstack_lb_pool_v2" "k8s_api" {
 }
 
 resource "openstack_lb_pool_v2" "https" {
-  name            = "K8s Master Pool"
+  name            = "K8s Master Pool HTTPS"
   protocol        = "HTTPS"
+  lb_method       = "ROUND_ROBIN"
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  admin_state_up  = true
+}
+
+resource "openstack_lb_pool_v2" "http" {
+  name            = "K8s Master Pool HTTP"
+  protocol        = "HTTP"
   lb_method       = "ROUND_ROBIN"
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   admin_state_up  = true
@@ -39,6 +47,15 @@ resource "openstack_lb_listener_v2" "https" {
   name            = "K8s Master Listener HTTPS"
   protocol        = "HTTPS"
   protocol_port   = 443
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  default_pool_id = openstack_lb_pool_v2.https.id
+  admin_state_up  = true
+}
+
+resource "openstack_lb_listener_v2" "http" {
+  name            = "K8s Master Listener HTTP"
+  protocol        = "HTTP"
+  protocol_port   = 80
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   default_pool_id = openstack_lb_pool_v2.https.id
   admin_state_up  = true
@@ -63,6 +80,17 @@ resource "openstack_lb_member_v2" "https" {
   // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
   address        = each.value
   protocol_port  = 443
+  admin_state_up = true
+}
+
+resource "openstack_lb_member_v2" "http" {
+  for_each       = var.members
+
+  name           = each.key
+  pool_id        = openstack_lb_pool_v2.http.id
+  // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
+  address        = each.value
+  protocol_port  = 80
   admin_state_up = true
 }
 
