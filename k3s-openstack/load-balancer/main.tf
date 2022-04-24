@@ -18,12 +18,29 @@ resource "openstack_lb_pool_v2" "k8s_api" {
   admin_state_up  = true
 }
 
+resource "openstack_lb_pool_v2" "https" {
+  name            = "K8s Master Pool"
+  protocol        = "HTTPS"
+  lb_method       = "ROUND_ROBIN"
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  admin_state_up  = true
+}
+
 resource "openstack_lb_listener_v2" "k8s_api" {
-  name            = "K8s Master Listener"
+  name            = "K8s Master Listener API"
   protocol        = "HTTPS"
   protocol_port   = 6443
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   default_pool_id = openstack_lb_pool_v2.k8s_api.id
+  admin_state_up  = true
+}
+
+resource "openstack_lb_listener_v2" "https" {
+  name            = "K8s Master Listener HTTPS"
+  protocol        = "HTTPS"
+  protocol_port   = 443
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  default_pool_id = openstack_lb_pool_v2.https.id
   admin_state_up  = true
 }
 
@@ -35,6 +52,17 @@ resource "openstack_lb_member_v2" "k8s_api" {
   // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
   address        = each.value
   protocol_port  = 6443
+  admin_state_up = true
+}
+
+resource "openstack_lb_member_v2" "https" {
+  for_each       = var.members
+
+  name           = each.key
+  pool_id        = openstack_lb_pool_v2.https.id
+  // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
+  address        = each.value
+  protocol_port  = 443
   admin_state_up = true
 }
 
