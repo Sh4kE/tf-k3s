@@ -57,7 +57,7 @@ resource "openstack_lb_listener_v2" "http" {
   protocol        = "HTTP"
   protocol_port   = 80
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
-  default_pool_id = openstack_lb_pool_v2.https.id
+  default_pool_id = openstack_lb_pool_v2.http.id
   admin_state_up  = true
 }
 
