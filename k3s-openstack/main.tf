@@ -14,6 +14,7 @@ data "openstack_images_image_v2" "k3s" {
 
   name        = var.image_name
   most_recent = true
+  visibility  = var.image_visibility
 }
 
 resource "openstack_blockstorage_volume_v3" "data" {

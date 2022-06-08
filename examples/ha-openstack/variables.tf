@@ -39,6 +39,7 @@ variable "data_volume_size" {
 
 variable "data_volume_type" {
   type = string
+  default = ""
 }
 
 variable "server_count" {
@@ -54,4 +55,15 @@ variable "agent_count" {
 variable "keypair_name" {
   type    = string
   default = null
+}
+
+variable "image_visibility" {
+  type        = string
+  description = "The visibility of the image. Must be one of \"public\", \"private\", \"community\", or \"shared\"."
+  default     = "private"
+}
+
+variable "ephemeral_data_volume" {
+  default     = false
+  description = "use an ephemeral disk for data, which will be deleted on instance termination"
 }

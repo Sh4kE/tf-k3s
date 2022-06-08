@@ -90,3 +90,9 @@ variable "floating_ip_pool" {
 variable "server_group_id" {
   default = null
 }
+
+variable "image_visibility" {
+  type        = string
+  description = "The visibility of the image. Must be one of \"public\", \"private\", \"community\", or \"shared\"."
+  default     = "private"
+}
