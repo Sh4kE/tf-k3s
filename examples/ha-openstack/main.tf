@@ -117,10 +117,18 @@ module "load-balancer" {
   source      = "../../k3s-openstack/load-balancer"
   floating_ip = module.floating-ip-master-lb.floating_ip
   subnet_id   = var.subnet_id
+  security_group_ids = [module.secgroup.security_group_id]
+  masters = {
+    "k3s-server-1" = module.server1.node_ip
+    "k3s-server-2" = module.servers[0].node_ip
+    "k3s-server-3" = module.servers[1].node_ip
+  }
   members = {
     "k3s-server-1" = module.server1.node_ip
     "k3s-server-2" = module.servers[0].node_ip
     "k3s-server-3" = module.servers[1].node_ip
+    "k3s-agent-1" = module.agents[0].node_ip
+    "k3s-agent-2" = module.agents[1].node_ip
   }
 }
 
