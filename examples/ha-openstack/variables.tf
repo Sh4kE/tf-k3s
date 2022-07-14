@@ -67,3 +67,8 @@ variable "ephemeral_data_volume" {
   default     = false
   description = "use an ephemeral disk for data, which will be deleted on instance termination"
 }
+
+variable "kubernetes_cluster_context" {
+  type        = string
+  default     = "k3s@k3s"
+}

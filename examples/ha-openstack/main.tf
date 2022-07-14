@@ -181,3 +181,19 @@ output "token" {
 # Configure the OpenStack Provider
 provider "openstack" {
 }
+
+provider "kubernetes" {
+    config_path = "~/.kube/config"
+    config_context = var.kubernetes_cluster_context
+}
+
+resource "kubernetes_labels" "nfs-node-label" {
+  api_version = "v1"
+  kind        = "Node"
+  metadata {
+    name = "k3s-server-1"
+  }
+  labels = {
+    "nfs-backup-enabled" = "true"
+  }
+}
