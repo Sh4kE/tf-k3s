@@ -96,6 +96,26 @@ resource "openstack_networking_secgroup_rule_v2" "kubernetes_node_ports_udp" {
   security_group_id = local.security_group_id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = var.port_node_wireguard_udp
+  port_range_max    = var.port_node_wireguard_udp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_out" {
+  direction         = "egress"
+  ethertype         = "IPv4"
+  protocol          = "udp"
+  port_range_min    = var.port_node_wireguard_udp
+  port_range_max    = var.port_node_wireguard_udp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
 resource "openstack_networking_secgroup_rule_v2" "internal_tcp_v6" {
   count = var.enable_ipv6 ? 1 : 0
 
@@ -170,6 +190,30 @@ resource "openstack_networking_secgroup_rule_v2" "kubernetes_node_ports_udp_v6" 
   protocol          = "udp"
   port_range_min    = var.port_node_udp_min
   port_range_max    = var.port_node_udp_max
+  remote_ip_prefix  = var.allow_remote_prefix_v6
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "udp"
+  port_range_min    = var.port_node_wireguard_udp
+  port_range_max    = var.port_node_wireguard_udp
+  remote_ip_prefix  = var.allow_remote_prefix_v6
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_v6_out" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "egress"
+  ethertype         = "IPv6"
+  protocol          = "udp"
+  port_range_min    = var.port_node_wireguard_udp
+  port_range_max    = var.port_node_wireguard_udp
   remote_ip_prefix  = var.allow_remote_prefix_v6
   security_group_id = local.security_group_id
 }

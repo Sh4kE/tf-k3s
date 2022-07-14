@@ -28,3 +28,4 @@ variable "port_node_tcp_min" { default = 30000 }
 variable "port_node_tcp_max" { default = 32767 }
 variable "port_node_udp_min" { default = 30000 }
 variable "port_node_udp_max" { default = 32767 }
+variable "port_node_wireguard_udp" { default = 51820 }

@@ -12,6 +12,10 @@ variable "floating_ip" {
   description = "A floating ip will be assigned to the load balancer and registered as k3s_external_ip"
 }
 
+variable "masters" {
+  type = map(string)
+}
+
 variable "members" {
   type = map(string)
 }

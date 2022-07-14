@@ -34,6 +34,14 @@ resource "openstack_lb_pool_v2" "http" {
   admin_state_up  = true
 }
 
+#resource "openstack_lb_pool_v2" "wireguard" {
+#  name            = "K8s Pool Wireguard"
+#  protocol        = "UDP"
+#  lb_method       = "ROUND_ROBIN"
+#  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+#  admin_state_up  = true
+#}
+
 resource "openstack_lb_listener_v2" "k8s_api" {
   name            = "K8s Master Listener API"
   protocol        = "HTTPS"
@@ -62,11 +70,10 @@ resource "openstack_lb_listener_v2" "http" {
 }
 
 resource "openstack_lb_member_v2" "k8s_api" {
-  for_each       = var.members
+  for_each       = var.masters
 
   name           = each.key
   pool_id        = openstack_lb_pool_v2.k8s_api.id
-  // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
   address        = each.value
   protocol_port  = 6443
   admin_state_up = true
@@ -77,7 +84,6 @@ resource "openstack_lb_member_v2" "https" {
 
   name           = each.key
   pool_id        = openstack_lb_pool_v2.https.id
-  // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
   address        = each.value
   protocol_port  = 443
   admin_state_up = true
@@ -88,7 +94,6 @@ resource "openstack_lb_member_v2" "http" {
 
   name           = each.key
   pool_id        = openstack_lb_pool_v2.http.id
-  // address        = openstack_networking_port_v2.mgmt.all_fixed_ips[0]
   address        = each.value
   protocol_port  = 80
   admin_state_up = true
@@ -102,4 +107,26 @@ resource "openstack_lb_monitor_v2" "k8s_api" {
   timeout        = 5
   max_retries    = 3
   admin_state_up = true
+}
+
+resource "openstack_lb_monitor_v2" "https" {
+  name           = "K8s HTTPS Health Monitor"
+  pool_id        = openstack_lb_pool_v2.https.id
+  type           = "HTTPS"
+  delay          = 5
+  timeout        = 5
+  max_retries    = 3
+  admin_state_up = true
+  expected_codes = "404"
+}
+
+resource "openstack_lb_monitor_v2" "http" {
+  name           = "K8s HTTP Health Monitor"
+  pool_id        = openstack_lb_pool_v2.http.id
+  type           = "HTTP"
+  delay          = 5
+  timeout        = 5
+  max_retries    = 3
+  admin_state_up = true
+  expected_codes = "404"
 }
