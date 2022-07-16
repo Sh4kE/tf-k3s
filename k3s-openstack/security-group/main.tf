@@ -116,6 +116,86 @@ resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_out" 
   security_group_id = local.security_group_id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "smtp_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_smtp
+  port_range_max    = var.port_smtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "smtp_out" {
+  direction         = "egress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_smtp
+  port_range_max    = var.port_smtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp
+  port_range_max    = var.port_esmtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_out" {
+  direction         = "egress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp
+  port_range_max    = var.port_esmtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_starttls_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp_starttls
+  port_range_max    = var.port_esmtp_starttls
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_starttls_out" {
+  direction         = "egress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp_starttls
+  port_range_max    = var.port_esmtp_starttls
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "imap_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_imap
+  port_range_max    = var.port_imap
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "imap_tls_in" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = var.port_imap_tls
+  port_range_max    = var.port_imap_tls
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
 resource "openstack_networking_secgroup_rule_v2" "internal_tcp_v6" {
   count = var.enable_ipv6 ? 1 : 0
 
@@ -215,5 +295,101 @@ resource "openstack_networking_secgroup_rule_v2" "kubernetes_wireguard_udp_v6_ou
   port_range_min    = var.port_node_wireguard_udp
   port_range_max    = var.port_node_wireguard_udp
   remote_ip_prefix  = var.allow_remote_prefix_v6
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "smtp_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_smtp
+  port_range_max    = var.port_smtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "smtp_v6_out" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "egress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_smtp
+  port_range_max    = var.port_smtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp
+  port_range_max    = var.port_esmtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_v6_out" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "egress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp
+  port_range_max    = var.port_esmtp
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_starttls_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp_starttls
+  port_range_max    = var.port_esmtp_starttls
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "esmtp_starttls_v6_out" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "egress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_esmtp_starttls
+  port_range_max    = var.port_esmtp_starttls
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "imap_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_imap
+  port_range_max    = var.port_imap
+  remote_ip_prefix  = var.allow_remote_prefix
+  security_group_id = local.security_group_id
+}
+
+resource "openstack_networking_secgroup_rule_v2" "imap_tls_v6_in" {
+  count = var.enable_ipv6 ? 1 : 0
+
+  direction         = "ingress"
+  ethertype         = "IPv6"
+  protocol          = "tcp"
+  port_range_min    = var.port_imap_tls
+  port_range_max    = var.port_imap_tls
+  remote_ip_prefix  = var.allow_remote_prefix
   security_group_id = local.security_group_id
 }
