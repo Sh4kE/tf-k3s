@@ -19,21 +19,6 @@ module "secgroup" {
   source = "../../k3s-openstack/security-group"
 }
 
-locals {
-  token = "${random_password.bootstrap_token_id.result}.${random_password.bootstrap_token_secret.result}"
-  common_k3s_args = [
-    "--kube-apiserver-arg", "enable-bootstrap-token-auth",
-    "--disable", "traefik"
-  ]
-}
-
-# data "k8sbootstrap_auth" "auth" {
-#   depends_on = [module.secgroup]
-#
-#   server = module.server1.k3s_external_url
-#   token  = local.token
-# }
-
 module "floating-ip-master-lb" {
   source = "../../k3s-openstack/floating-ip"
 
@@ -132,61 +117,6 @@ module "load-balancer" {
   }
 }
 
-output "cluster_token" {
-  value     = random_password.cluster_token.result
-  sensitive = true
-}
-
-output "k3s_url" {
-  value = module.server1.k3s_url
-}
-
-output "k3s_external_url" {
-  value = module.server1.k3s_external_url
-}
-
-output "server_ip" {
-  value = module.server1.node_ip
-}
-
-output "server_external_ip" {
-  value = module.server1.node_external_ip
-}
-
-output "server_user_data" {
-  value     = module.server1.user_data
-  sensitive = true
-}
-
-output "token" {
-  value     = local.token
-  sensitive = true
-}
-
-# output "ca_crt" {
-#   value = data.k8sbootstrap_auth.auth.ca_crt
-# }
-#
-# output "kubeconfig" {
-#   value     = data.k8sbootstrap_auth.auth.kubeconfig
-#   sensitive = true
-# }
-#
-# provider "kubernetes" {
-#   host                   = module.server1.k3s_url
-#   token                  = local.token
-#   cluster_ca_certificate = data.k8sbootstrap_auth.auth.ca_crt
-# }
-
-# Configure the OpenStack Provider
-provider "openstack" {
-}
-
-provider "kubernetes" {
-    config_path = "~/.kube/config"
-    config_context = var.kubernetes_cluster_context
-}
-
 resource "kubernetes_labels" "nfs-node-label" {
   api_version = "v1"
   kind        = "Node"
@@ -196,4 +126,6 @@ resource "kubernetes_labels" "nfs-node-label" {
   labels = {
     "nfs-backup-enabled" = "true"
   }
+
+  depends_on = [module.server1, module.servers, module.load-balancer]
 }
