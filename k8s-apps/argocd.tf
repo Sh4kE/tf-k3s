@@ -6,6 +6,8 @@ resource "kubernetes_namespace" "argocd" {
 
 resource "kubernetes_manifest" "argocd-vault-plugin-credentials-secret" {
   manifest = yamldecode(file("./k8s-projects/argocd/manifests/argocd-vault-plugin-credentials.yaml"))
+
+  depends_on = [kubernetes_namespace.argocd]
 }
 
 #resource "kubernetes_manifest" "argocd-install" {
@@ -31,4 +33,44 @@ resource "kubernetes_manifest" "argocd-install" {
     ] : "${value["kind"]}--${value["metadata"]["name"]}" => value
   }
   manifest = each.value
+  depends_on = [kubernetes_namespace.argocd]
 }
+
+resource "time_sleep" "wait_for_argocd_api" {
+  create_duration = "90s"
+  destroy_duration = "30s"
+  depends_on  = [
+    kubernetes_manifest.argocd-install
+  ]
+}
+
+data "kubernetes_secret" "argocd-initial-admin-secret" {
+  metadata {
+    name = "argocd-initial-admin-secret"
+    namespace = "argocd"
+  }
+  depends_on = [
+    time_sleep.wait_for_argocd_api,
+  ]
+}
+
+output "argocd-initial-admin-secret" {
+  value = data.kubernetes_secret.argocd-initial-admin-secret
+  sensitive = true
+}
+
+resource "kubernetes_manifest" "argocd-ingress" {
+  manifest = yamldecode(file("./k8s-projects/argocd/manifests/ingress.yaml"))
+
+  depends_on = [kubernetes_namespace.argocd, kubernetes_manifest.nginx-argocd-application]
+}
+
+#provider "argocd" {
+#  server_addr = var.argocd_server_addr
+#  username    = var.argocd_server_user
+#  password    = var.argocd_server_password
+#}
+#
+#module "argocd-apps" {
+#  source = "./"
+#}
