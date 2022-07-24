@@ -65,12 +65,9 @@ resource "kubernetes_manifest" "argocd-ingress" {
   depends_on = [kubernetes_namespace.argocd, kubernetes_manifest.nginx-argocd-application]
 }
 
-#provider "argocd" {
-#  server_addr = var.argocd_server_addr
-#  username    = var.argocd_server_user
-#  password    = var.argocd_server_password
-#}
-#
-#module "argocd-apps" {
-#  source = "./"
-#}
+module "argocd-apps" {
+  source = "./argocd-apps"
+
+  depends_on = [kubernetes_manifest.nginx-argocd-application]
+}
+

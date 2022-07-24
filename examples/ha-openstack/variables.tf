@@ -72,3 +72,13 @@ variable "kubernetes_cluster_context" {
   type        = string
   default     = "k3s@k3s"
 }
+
+variable "argocd_server_addr" {
+  type = string
+  default = "argocd.k3s.sh4ke.rocks"
+}
+
+variable "argocd_server_user" {
+  type = string
+  default = "admin"
+}

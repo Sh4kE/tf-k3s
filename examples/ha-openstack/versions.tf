@@ -8,6 +8,10 @@ terraform {
       source  = "terraform-provider-openstack/openstack"
       version = ">= 1.37.0"
     }
+    argocd = {
+      source = "oboukili/argocd"
+      version = ">= 3.1.0"
+    }
   }
   required_version = ">= 0.13"
 }
