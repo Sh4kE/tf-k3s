@@ -117,6 +117,18 @@ module "load-balancer" {
   }
 }
 
+resource "null_resource" "wait-for-k3s-external-url" {
+  triggers = {
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = "curl -k --retry-all-errors --retry 10 ${module.server1.k3s_external_url}"
+  }
+
+  depends_on = [module.server1, module.load-balancer, module.floating-ip-master-lb]
+}
+
 resource "kubernetes_labels" "nfs-node-label" {
   api_version = "v1"
   kind        = "Node"
@@ -127,5 +139,5 @@ resource "kubernetes_labels" "nfs-node-label" {
     "nfs-backup-enabled" = "true"
   }
 
-  depends_on = [module.server1, module.servers, module.load-balancer]
+  depends_on = [null_resource.wait-for-k3s-external-url]
 }
