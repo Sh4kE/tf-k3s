@@ -141,3 +141,10 @@ resource "kubernetes_labels" "nfs-node-label" {
 
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
+
+module "k8s-apps" {
+  source = "../../k8s-apps"
+
+  depends_on = [null_resource.wait-for-k3s-external-url]
+}
+
