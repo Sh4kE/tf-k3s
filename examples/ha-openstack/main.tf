@@ -119,11 +119,11 @@ module "load-balancer" {
 
 resource "null_resource" "wait-for-k3s-external-url" {
   triggers = {
-    always_run = timestamp()
+    wait_for_external_url = join(",", [jsonencode(module.server1), jsonencode(module.servers[0]), jsonencode(module.servers[1])])
   }
 
   provisioner "local-exec" {
-    command = "curl -k --retry-all-errors --retry 10 ${module.server1.k3s_external_url}"
+    command = "curl -ks --retry-all-errors --retry 10 ${module.server1.k3s_external_url}"
   }
 
   depends_on = [module.server1, module.load-balancer, module.floating-ip-master-lb]
@@ -147,4 +147,3 @@ module "k8s-apps" {
 
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
-

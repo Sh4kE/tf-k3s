@@ -82,3 +82,4 @@ variable "argocd_server_user" {
   type = string
   default = "admin"
 }
+

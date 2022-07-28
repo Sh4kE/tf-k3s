@@ -18,3 +18,6 @@ provider "kubernetes" {
 #  password    = module.k8s-apps.argocd-initial-admin-secret.data.password
   password    = "BWxVDwh-BwXJGrkC"
 }*/
+
+provider "vault" {
+}
