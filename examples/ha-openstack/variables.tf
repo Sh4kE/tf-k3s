@@ -75,7 +75,7 @@ variable "kubernetes_cluster_context" {
 
 variable "argocd_server_addr" {
   type = string
-  default = "argocd.k3s.sh4ke.rocks"
+  default = "argocd.k3s.sh4ke.rocks:443"
 }
 
 variable "argocd_server_user" {
