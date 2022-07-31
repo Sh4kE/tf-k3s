@@ -121,6 +121,13 @@ resource "openstack_networking_port_v2" "mgmt" {
     subnet_id  = var.subnet_id
     ip_address = var.k3s_ip
   }
+
+  dynamic "allowed_address_pairs" {
+    for_each = var.additional_address_pairs
+    content {
+      ip_address = allowed_address_pairs.value
+    }
+  }
 }
 
 resource "openstack_networking_floatingip_v2" "node" {

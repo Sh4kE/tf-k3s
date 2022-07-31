@@ -47,6 +47,12 @@ module "server1" {
   k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args, ["--node-label", "az=${var.availability_zones[0]}"])
   bootstrap_token_id     = random_password.bootstrap_token_id.result
   bootstrap_token_secret = random_password.bootstrap_token_secret.result
+
+  additional_address_pairs = [
+    "10.0.0.0/24",
+    "192.168.178.0/24",
+    "192.168.2.0/24"
+  ]
 }
 
 module "servers" {

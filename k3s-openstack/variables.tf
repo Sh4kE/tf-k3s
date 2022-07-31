@@ -96,3 +96,9 @@ variable "image_visibility" {
   description = "The visibility of the image. Must be one of \"public\", \"private\", \"community\", or \"shared\"."
   default     = "private"
 }
+
+variable "additional_address_pairs" {
+  type = list(string)
+  default = []
+  description = "A list of IPs that can be active on this port"
+}
