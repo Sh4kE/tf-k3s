@@ -12,5 +12,4 @@ provider "kubernetes" {
   cluster_ca_certificate = data.k8sbootstrap_auth.auth.ca_crt
 }
 
-provider "vault" {
-}
+provider "vault" {}
