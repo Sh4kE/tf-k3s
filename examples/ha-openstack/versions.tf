@@ -1,4 +1,20 @@
 terraform {
+  backend "s3" {
+    endpoint = "http://ganymed:9000"
+
+    bucket = "terraform-state"
+    key    = "terraform.tfstate"
+    region = "eu-central-1"
+
+    access_key = "***REMOVED***"
+    secret_key = "***REMOVED***"
+
+    skip_credentials_validation = true
+    skip_metadata_api_check = true
+    skip_region_validation = true
+    force_path_style = true
+  }
+
   required_providers {
     k8sbootstrap = {
       source  = "nimbolus/k8sbootstrap"
