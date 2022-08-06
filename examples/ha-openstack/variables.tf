@@ -82,3 +82,7 @@ variable "argocd_server_user" {
   type = string
   default = "admin"
 }
+
+variable "cloudflare_api_token" {
+  type = string
+}

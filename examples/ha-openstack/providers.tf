@@ -13,3 +13,7 @@ provider "kubernetes" {
 }
 
 provider "vault" {}
+
+#provider "cloudflare" {
+#  api_token = var.cloudflare_api_token
+#}

@@ -151,5 +151,7 @@ resource "kubernetes_labels" "nfs-node-label" {
 module "k8s-apps" {
   source = "../../k8s-apps"
 
+  lb_external_ip = module.floating-ip-master-lb.floating_ip
+
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
