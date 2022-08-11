@@ -25,6 +25,10 @@ terraform {
       source = "oboukili/argocd"
       version = ">= 3.1.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 3.0"
+    }
   }
   required_version = ">= 0.13"
 }

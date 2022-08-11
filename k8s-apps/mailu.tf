@@ -47,21 +47,20 @@ resource "vault_kv_secret_v2" "mailu-secrets" {
   )
 }
 
-#data "cloudflare_zone" "sh4ke-rocks" {
-#  name = "sh4ke.rocks"
-#}
-#
-#resource "cloudflare_record" "sh4ke-rocks" {
-#  zone_id = data.cloudflare_zone.sh4ke-rocks.id
-#  name    = "@"
-#  value   = var.lb_external_ip
-#  type    = "A"
-#  ttl     = 300
-#}
+data "cloudflare_zone" "sh4ke-rocks" {
+  name = "sh4ke.rocks"
+}
+
+resource "cloudflare_record" "sh4ke-rocks" {
+  zone_id = data.cloudflare_zone.sh4ke-rocks.id
+  name    = "sh4ke.rocks"
+  value   = var.lb_external_ip
+  type    = "A"
+  ttl     = 300
+}
 
 resource "kubernetes_manifest" "mailu-argocd-application" {
   manifest = yamldecode(file("./k8s-projects/mailu/application.yaml"))
 
-  # depends_on = [kubernetes_manifest.argocd-install, vault_kv_secret_v2.mailu-secrets, cloudflare_record.sh4ke-rocks]
-  depends_on = [kubernetes_manifest.argocd-install, vault_kv_secret_v2.mailu-secrets]
+  depends_on = [kubernetes_manifest.argocd-install, vault_kv_secret_v2.mailu-secrets, cloudflare_record.sh4ke-rocks]
 }
