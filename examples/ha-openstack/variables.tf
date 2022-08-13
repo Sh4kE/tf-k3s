@@ -94,3 +94,8 @@ variable "root_domain" {
 variable "sub_domain" {
   type = string
 }
+
+variable "k3s_args" {
+  type = list(string)
+  default = []
+}

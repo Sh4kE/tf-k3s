@@ -28,7 +28,7 @@ module "floating-ip-master-lb" {
 module "server1" {
   source = "../../k3s-openstack"
 
-  name               = "k3s-server-1"
+  name               = "k3s-server-1.${var.sub_domain}.${var.root_domain}"
   image_name         = var.image_name
   image_visibility   = var.image_visibility
   flavor_name        = var.master1_flavor_name
@@ -44,7 +44,11 @@ module "server1" {
   k3s_external_ip    = module.floating-ip-master-lb.floating_ip
 
   cluster_token          = random_password.cluster_token.result
-  k3s_args               = concat(["server", "--cluster-init"], local.common_k3s_args, ["--node-label", "az=${var.availability_zones[0]}"])
+  k3s_args               = concat(["server", "--cluster-init"],
+                                  local.common_k3s_args,
+                                  ["--node-label", "az=${var.availability_zones[0]}"],
+                                  var.k3s_args
+                           )
   bootstrap_token_id     = random_password.bootstrap_token_id.result
   bootstrap_token_secret = random_password.bootstrap_token_secret.result
 
@@ -77,7 +81,11 @@ module "servers" {
   k3s_join_existing = true
   k3s_url           = module.server1.k3s_url
   cluster_token     = random_password.cluster_token.result
-  k3s_args          = concat(["server"], local.common_k3s_args, ["--node-label", "az=${var.availability_zones[(count.index + 1) % length(var.availability_zones)]}"])
+  k3s_args          = concat(["server"],
+                             local.common_k3s_args,
+                             ["--node-label", "az=${var.availability_zones[(count.index + 1) % length(var.availability_zones)]}"],
+                             var.k3s_args
+                      )
 }
 
 module "agents" {
@@ -153,6 +161,8 @@ resource "kubernetes_labels" "nfs-node-label" {
     "nfs-backup-enabled" = "true"
   }
 
+  provider = kubernetes.kubeconfig
+
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
 
@@ -161,50 +171,9 @@ module "k8s-apps" {
 
   lb_external_ip = module.floating-ip-master-lb.floating_ip
 
-  depends_on = [null_resource.wait-for-k3s-external-url]
-}
+  providers = {
+    kubernetes = kubernetes.kubeconfig
+  }
 
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-spf
-  to   = module.dns.cloudflare_record.sh4ke-rocks-spf
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-mx
-  to   = module.dns.cloudflare_record.sh4ke-rocks-mx
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-submission
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-submission
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3s
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3s
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-imaps
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-imaps
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-imap
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-imap
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dmarc-report
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dmarc-report
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dmarc
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dmarc
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dkim
-  to   = module.dns.cloudflare_record.sh4ke-rocks-dkim
-}
-moved {
-  from = module.k8s-apps.cloudflare_record.sh4ke-rocks
-  to   = module.dns.cloudflare_record.sh4ke-rocks
+  depends_on = [null_resource.wait-for-k3s-external-url]
 }
