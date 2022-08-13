@@ -123,6 +123,14 @@ module "load-balancer" {
   }
 }
 
+module "dns" {
+  source = "../../dns"
+
+  domain         = var.root_domain
+  subdomain      = var.sub_domain
+  lb_external_ip = module.floating-ip-master-lb.floating_ip
+}
+
 resource "null_resource" "wait-for-k3s-external-url" {
   triggers = {
     wait_for_external_url = join(",", [jsonencode(module.server1), jsonencode(module.servers[0]), jsonencode(module.servers[1])])
@@ -132,7 +140,7 @@ resource "null_resource" "wait-for-k3s-external-url" {
     command = "curl -ks --retry-all-errors --retry 10 ${module.server1.k3s_external_url}"
   }
 
-  depends_on = [module.server1, module.load-balancer, module.floating-ip-master-lb]
+  depends_on = [module.server1, module.load-balancer, module.floating-ip-master-lb, module.dns]
 }
 
 resource "kubernetes_labels" "nfs-node-label" {
@@ -154,4 +162,49 @@ module "k8s-apps" {
   lb_external_ip = module.floating-ip-master-lb.floating_ip
 
   depends_on = [null_resource.wait-for-k3s-external-url]
+}
+
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-spf
+  to   = module.dns.cloudflare_record.sh4ke-rocks-spf
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-mx
+  to   = module.dns.cloudflare_record.sh4ke-rocks-mx
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-submission
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-submission
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3s
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3s
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-pop3
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-imaps
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-imaps
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dns-auto-config-imap
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dns-auto-config-imap
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dmarc-report
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dmarc-report
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dmarc
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dmarc
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks-dkim
+  to   = module.dns.cloudflare_record.sh4ke-rocks-dkim
+}
+moved {
+  from = module.k8s-apps.cloudflare_record.sh4ke-rocks
+  to   = module.dns.cloudflare_record.sh4ke-rocks
 }

@@ -86,3 +86,11 @@ variable "argocd_server_user" {
 variable "cloudflare_api_token" {
   type = string
 }
+
+variable "root_domain" {
+  type = string
+}
+
+variable "sub_domain" {
+  type = string
+}
