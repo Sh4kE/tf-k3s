@@ -1,4 +1,4 @@
-/*data "http" "volumesnapshotclasses" {
+data "http" "volumesnapshotclasses" {
   url = "https://raw.githubusercontent.com/kubernetes-csi/external-snapshotter/${var.volume-snapshot-crd-version}/client/config/crd/snapshot.storage.k8s.io_volumesnapshotclasses.yaml"
 }
 
@@ -11,27 +11,22 @@ data "http" "volumesnapshots" {
 }
 
 resource "kubernetes_manifest" "crd-volumesnapshotclasses" {
-  manifest = yamldecode(data.http.volumesnapshotclasses.body)
+  manifest = yamldecode(file("./k8s-projects/argocd/manifests/argocd-vault-plugin-credentials.yaml"))
 
-  depends_on = [kubernetes_manifest.argocd-install]
+  depends_on = [kubernetes_namespace.argocd]
 }
 
 resource "kubernetes_manifest" "crd-volumesnapshotcontents" {
-  manifest = yamldecode(data.http.volumesnapshotcontents.body)
+  manifest = yamldecode(file("./k8s-projects/argocd/manifests/argocd-vault-plugin-credentials.yaml"))
 
-  depends_on = [kubernetes_manifest.argocd-install]
+  depends_on = [kubernetes_namespace.argocd]
 }
 
 resource "kubernetes_manifest" "crd-volumesnapshots" {
-  manifest = yamldecode(data.http.volumesnapshots.body)
+  manifest = yamldecode(file("./k8s-projects/argocd/manifests/argocd-vault-plugin-credentials.yaml"))
 
-  depends_on = [kubernetes_manifest.argocd-install]
+  depends_on = [kubernetes_namespace.argocd]
 }
-
-variable "volume-snapshot-crd-version" {
-  type = string
-  default = "v6.0.1"
-}*/
 
 resource "kubernetes_manifest" "csi-driver-nfs-argocd-application" {
   manifest = yamldecode(file("./k8s-projects/csi-driver-nfs/application.yaml"))

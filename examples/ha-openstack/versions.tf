@@ -15,19 +15,17 @@ terraform {
   required_providers {
     k8sbootstrap = {
       source  = "nimbolus/k8sbootstrap"
-      version = ">= 0.1.1"
+      version = "~> 0.1"
     }
     openstack = {
       source  = "terraform-provider-openstack/openstack"
-      version = ">= 1.37.0"
+      version = "~> 1.37"
     }
     argocd = {
       source = "oboukili/argocd"
-      version = ">= 3.1.0"
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
-      version = "~> 3.0"
     }
   }
   required_version = ">= 0.13"

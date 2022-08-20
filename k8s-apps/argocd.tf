@@ -10,10 +10,6 @@ resource "kubernetes_manifest" "argocd-vault-plugin-credentials-secret" {
   depends_on = [kubernetes_namespace.argocd]
 }
 
-#resource "kubernetes_manifest" "argocd-install" {
-#  manifest = yamldecode(file("./k8s-projects/argocd/manifests/install.yaml"))
-#}
-
 resource "kubernetes_manifest" "argocd-install" {
   # Create a map { "kind--name" => yaml_doc } from the multi-document yaml text.
   # Each element is a separate kubernetes resource.
@@ -40,11 +36,11 @@ resource "time_sleep" "wait_for_argocd_api" {
   create_duration = "90s"
   destroy_duration = "30s"
   depends_on  = [
-    kubernetes_manifest.argocd-install
+    kubernetes_manifest.argocd-install,
   ]
 }
 
-/*data "kubernetes_secret" "argocd-initial-admin-secret" {
+data "kubernetes_secret" "argocd-initial-admin-secret" {
   metadata {
     name = "argocd-initial-admin-secret"
     namespace = "argocd"
@@ -57,17 +53,17 @@ resource "time_sleep" "wait_for_argocd_api" {
 output "argocd-initial-admin-secret" {
   value = data.kubernetes_secret.argocd-initial-admin-secret
   sensitive = true
-}*/
-
-resource "kubernetes_manifest" "argocd-ingress" {
-  manifest = yamldecode(file("./k8s-projects/argocd/manifests/ingress.yaml"))
-
-  depends_on = [kubernetes_namespace.argocd, kubernetes_manifest.nginx-argocd-application]
 }
 
-/*module "argocd-apps" {
+resource "kubernetes_manifest" "argocd-ingress" {
+  manifest = yamldecode(file("./k8s-projects/argocd/manifests/ingress-${terraform.workspace}.yaml"))
+
+  depends_on = [kubernetes_namespace.argocd]
+}
+
+module "argocd-apps" {
   source = "./argocd-apps"
 
-  depends_on = [kubernetes_manifest.nginx-argocd-application]
-}*/
+  depends_on = [kubernetes_manifest.argocd-ingress]
+}
 

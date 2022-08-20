@@ -37,3 +37,8 @@ output "kubeconfig" {
   value     = data.k8sbootstrap_auth.auth.kubeconfig
   sensitive = true
 }
+
+output "argocd-initial-admin-secret" {
+  value = module.k8s-apps.argocd-initial-admin-secret
+  sensitive = true
+}

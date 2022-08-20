@@ -64,7 +64,7 @@ module "servers" {
 
   count = var.server_count
 
-  name               = "k3s-server-${count.index + 2}"
+  name               = "k3s-server-${count.index + 2}.${var.sub_domain}.${var.root_domain}"
   image_name         = var.image_name
   image_visibility   = var.image_visibility
   flavor_name        = var.masters_flavor_name
@@ -93,7 +93,7 @@ module "agents" {
 
   count = var.agent_count
 
-  name               = "k3s-agent-${count.index + 1}"
+  name               = "k3s-agent-${count.index + 1}.${var.sub_domain}.${var.root_domain}"
   image_name         = var.image_name
   image_visibility   = var.image_visibility
   flavor_name        = var.node_flavor_name
@@ -155,13 +155,19 @@ resource "kubernetes_labels" "nfs-node-label" {
   api_version = "v1"
   kind        = "Node"
   metadata {
-    name = "k3s-server-1"
+    name = "k3s-server-1-${var.sub_domain}-${replace(var.root_domain, ".", "-")}"
   }
   labels = {
     "nfs-backup-enabled" = "true"
   }
 
   provider = kubernetes.kubeconfig
+
+  depends_on = [null_resource.wait-for-k3s-external-url]
+}
+
+module "k8s-helm-charts" {
+  source = "../../k8s-helm-charts"
 
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
@@ -175,5 +181,6 @@ module "k8s-apps" {
     kubernetes = kubernetes.kubeconfig
   }
 
-  depends_on = [null_resource.wait-for-k3s-external-url]
+  depends_on = [module.k8s-helm-charts]
 }
+
