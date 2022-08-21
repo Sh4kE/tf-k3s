@@ -155,19 +155,24 @@ resource "kubernetes_labels" "nfs-node-label" {
   api_version = "v1"
   kind        = "Node"
   metadata {
-    name = "k3s-server-1-${var.sub_domain}-${replace(var.root_domain, ".", "-")}"
+    name = "k3s-server-1"
+    # name = "k3s-server-1-${var.sub_domain}-${replace(var.root_domain, ".", "-")}"
   }
   labels = {
     "nfs-backup-enabled" = "true"
   }
 
-  provider = kubernetes.kubeconfig
+  # provider = kubernetes.kubeconfig
 
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
 
 module "k8s-helm-charts" {
   source = "../../k8s-helm-charts"
+
+  providers = {
+    helm = helm.kubeconfig
+  }
 
   depends_on = [null_resource.wait-for-k3s-external-url]
 }
@@ -177,9 +182,9 @@ module "k8s-apps" {
 
   lb_external_ip = module.floating-ip-master-lb.floating_ip
 
-  providers = {
-    kubernetes = kubernetes.kubeconfig
-  }
+  # providers = {
+  #   kubernetes = kubernetes.kubeconfig
+  # }
 
   depends_on = [module.k8s-helm-charts]
 }

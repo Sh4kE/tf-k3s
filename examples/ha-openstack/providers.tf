@@ -36,16 +36,16 @@ provider "argocd" {
 
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/config"
-    config_context = terraform.workspace
+    host                   = module.server1.k3s_external_url
+    token                  = local.token
+    cluster_ca_certificate = data.k8sbootstrap_auth.auth.ca_crt
   }
 }
 
 provider "helm" {
   kubernetes {
-    host                   = module.server1.k3s_external_url
-    token                  = local.token
-    cluster_ca_certificate = data.k8sbootstrap_auth.auth.ca_crt
+    config_path = "~/.kube/config"
+    config_context = terraform.workspace
   }
 
   alias = "kubeconfig"
