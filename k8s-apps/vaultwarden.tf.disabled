@@ -1,0 +1,54 @@
+resource "random_password" "vaultwarden-admin-token" {
+  length  = 64
+  upper   = true
+  special = true
+  numeric = true
+}
+
+resource "random_password" "vaultwarden-database-username" {
+  length  = 16
+  upper   = false
+  special = false
+  numeric = false
+}
+
+resource "random_password" "vaultwarden-database-password" {
+  length  = 32
+  upper   = true
+  special = true
+  numeric = true
+}
+
+resource "random_password" "vaultwarden-database-root-password" {
+  length  = 32
+  upper   = true
+  special = true
+  numeric = true
+}
+
+resource "random_password" "vaultwarden-database" {
+  length  = 16
+  upper   = false
+  special = false
+  numeric = false
+}
+
+resource "vault_kv_secret_v2" "vaultwarden-secrets" {
+  mount     = module.vault.kv_mount.path
+  name      = "k3s/argocd/vaultwarden"
+  data_json = jsonencode(
+    {
+      admin-token = random_password.vaultwarden-admin-token.result
+      rootPassword = random_password.vaultwarden-database-root-password.result
+      username = random_password.vaultwarden-database-username.result
+      password = random_password.vaultwarden-database-password.result
+      database = random_password.vaultwarden-database.result
+    }
+  )
+}
+
+resource "kubernetes_manifest" "vaultwarden-argocd-application" {
+  manifest = yamldecode(file("./k8s-projects/vaultwarden/application.${terraform.workspace}.yaml"))
+
+  depends_on = [kubernetes_manifest.argocd-install, vault_kv_secret_v2.vaultwarden-secrets]
+}
