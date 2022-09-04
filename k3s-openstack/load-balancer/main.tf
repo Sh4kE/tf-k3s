@@ -34,7 +34,15 @@ resource "openstack_lb_pool_v2" "http" {
   admin_state_up  = true
 }
 
-resource "openstack_lb_pool_v2" "pop3s" {
+resource "openstack_lb_pool_v2" "ssh" {
+  name            = "K8s Master Pool SSH"
+  protocol        = "TCP"
+  lb_method       = "ROUND_ROBIN"
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  admin_state_up  = true
+}
+
+/*resource "openstack_lb_pool_v2" "pop3s" {
   name            = "K8s Master Pool POP SSL"
   protocol        = "TCP"
   lb_method       = "ROUND_ROBIN"
@@ -72,7 +80,7 @@ resource "openstack_lb_pool_v2" "smtpd" {
   lb_method       = "ROUND_ROBIN"
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   admin_state_up  = true
-}
+}*/
 
 #resource "openstack_lb_pool_v2" "wireguard" {
 #  name            = "K8s Pool Wireguard"
@@ -109,7 +117,16 @@ resource "openstack_lb_listener_v2" "http" {
   admin_state_up  = true
 }
 
-resource "openstack_lb_listener_v2" "pop3s" {
+resource "openstack_lb_listener_v2" "ssh" {
+  name            = "K8s Master Listener SSH"
+  protocol        = "TCP"
+  protocol_port   = 2222
+  loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
+  default_pool_id = openstack_lb_pool_v2.ssh.id
+  admin_state_up  = true
+}
+
+/*resource "openstack_lb_listener_v2" "pop3s" {
   name            = "K8s Master Listener POP SSL"
   protocol        = "TCP"
   protocol_port   = 995
@@ -152,7 +169,7 @@ resource "openstack_lb_listener_v2" "smtpd" {
   loadbalancer_id = openstack_lb_loadbalancer_v2.k8s_api.id
   default_pool_id = openstack_lb_pool_v2.smtpd.id
   admin_state_up  = true
-}
+}*/
 
 resource "openstack_lb_member_v2" "k8s_api" {
   for_each       = var.masters
@@ -184,7 +201,17 @@ resource "openstack_lb_member_v2" "http" {
   admin_state_up = true
 }
 
-resource "openstack_lb_member_v2" "pop3s" {
+resource "openstack_lb_member_v2" "ssh" {
+  for_each       = var.members
+
+  name           = each.key
+  pool_id        = openstack_lb_pool_v2.ssh.id
+  address        = each.value
+  protocol_port  = 2222
+  admin_state_up = true
+}
+
+/*resource "openstack_lb_member_v2" "pop3s" {
   for_each       = var.members
 
   name           = each.key
@@ -232,7 +259,7 @@ resource "openstack_lb_member_v2" "smtpd" {
   address        = each.value
   protocol_port  = 587
   admin_state_up = true
-}
+}*/
 
 resource "openstack_lb_monitor_v2" "k8s_api" {
   name           = "K8s Master Health Monitor"
@@ -266,6 +293,17 @@ resource "openstack_lb_monitor_v2" "http" {
   expected_codes = "404"
 }
 
+resource "openstack_lb_monitor_v2" "ssh" {
+  name           = "K8s POP SSL Health Monitor"
+  pool_id        = openstack_lb_pool_v2.ssh.id
+  type           = "TCP"
+  delay          = 5
+  timeout        = 5
+  max_retries    = 3
+  admin_state_up = true
+}
+
+/*
 resource "openstack_lb_monitor_v2" "pop3s" {
   name           = "K8s POP SSL Health Monitor"
   pool_id        = openstack_lb_pool_v2.pop3s.id
@@ -316,3 +354,4 @@ resource "openstack_lb_monitor_v2" "smtpd" {
   max_retries    = 3
   admin_state_up = true
 }
+*/

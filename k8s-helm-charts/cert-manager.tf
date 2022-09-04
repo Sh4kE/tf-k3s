@@ -18,6 +18,8 @@ resource "kubernetes_manifest" "cert-manager-crds" {
     ] : "${value["kind"]}--${value["metadata"]["name"]}" => value
   }
   manifest = each.value
+
+  # provider = kubernetes.kubeconfig
 }
 
 resource "helm_release" "cert-manager" {
