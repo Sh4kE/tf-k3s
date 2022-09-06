@@ -3,14 +3,6 @@ variable "availability_zones" {
   default = ["nova"]
 }
 
-variable "network_id" {
-  type = string
-}
-
-variable "subnet_id" {
-  type = string
-}
-
 variable "image_name" {
   default = "ubuntu-20.04-ansible"
 }
@@ -98,4 +90,17 @@ variable "sub_domain" {
 variable "k3s_args" {
   type = list(string)
   default = []
+}
+
+# THIS is given and cannot be changed!!!
+variable "external_network_id" {
+  type = string
+}
+
+variable "router_name" {
+  type = string
+}
+
+variable "intenal_subnet_cidr" {
+  type = string
 }

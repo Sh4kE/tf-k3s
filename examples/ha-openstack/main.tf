@@ -19,10 +19,20 @@ module "secgroup" {
   source = "../../k3s-openstack/security-group"
 }
 
+module "network" {
+  source = "../../network"
+
+  cidr                = var.intenal_subnet_cidr
+  external_network_id = var.external_network_id
+  router_name         = var.router_name
+}
+
 module "floating-ip-master-lb" {
   source = "../../k3s-openstack/floating-ip"
 
   floating_ip_pool = var.floating_ip_pool
+
+  depends_on = [module.network]
 }
 
 module "server1" {
@@ -34,8 +44,8 @@ module "server1" {
   flavor_name        = var.master1_flavor_name
   availability_zone  = var.availability_zones[0]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
-  network_id         = var.network_id
-  subnet_id          = var.subnet_id
+  network_id         = module.network.network_id
+  subnet_id          = module.network.subnet_id
   security_group_ids = [module.secgroup.id]
   data_volume_size   = var.data_volume_size
   data_volume_type   = var.data_volume_type
@@ -53,9 +63,8 @@ module "server1" {
   bootstrap_token_secret = random_password.bootstrap_token_secret.result
 
   additional_address_pairs = [
-    "10.0.0.0/24",
-    "192.168.178.0/24",
-    "192.168.2.0/24"
+    var.intenal_subnet_cidr,
+    "192.168.178.0/24"
   ]
 }
 
@@ -70,8 +79,8 @@ module "servers" {
   flavor_name        = var.masters_flavor_name
   availability_zone  = var.availability_zones[(count.index + 1) % length(var.availability_zones)]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
-  network_id         = var.network_id
-  subnet_id          = var.subnet_id
+  network_id         = module.network.network_id
+  subnet_id          = module.network.subnet_id
   security_group_ids = [module.secgroup.id]
   data_volume_size   = var.data_volume_size
   data_volume_type   = var.data_volume_type
@@ -86,8 +95,6 @@ module "servers" {
                              ["--node-label", "az=${var.availability_zones[(count.index + 1) % length(var.availability_zones)]}"],
                              var.k3s_args
                       )
-
-  depends_on = [module.server1]
 }
 
 module "agents" {
@@ -101,8 +108,8 @@ module "agents" {
   flavor_name        = var.node_flavor_name
   availability_zone  = var.availability_zones[count.index % length(var.availability_zones)]
   keypair_name       = var.keypair_name != null ? var.keypair_name : openstack_compute_keypair_v2.k3s[0].name
-  network_id         = var.network_id
-  subnet_id          = var.subnet_id
+  network_id         = module.network.network_id
+  subnet_id          = module.network.subnet_id
   security_group_ids = [module.secgroup.id]
   data_volume_size   = var.data_volume_size
   data_volume_type   = var.data_volume_type
@@ -117,7 +124,7 @@ module "agents" {
 module "load-balancer" {
   source      = "../../k3s-openstack/load-balancer"
   floating_ip = module.floating-ip-master-lb.floating_ip
-  subnet_id   = var.subnet_id
+  subnet_id   = module.network.subnet_id
   security_group_ids = [module.secgroup.security_group_id]
   masters = {
     "k3s-server-1" = module.server1.node_ip

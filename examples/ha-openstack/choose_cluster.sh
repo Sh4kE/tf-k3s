@@ -1,13 +1,5 @@
 CLUSTER=$1
 
-#if [ "$CLUSTER" = "openstack" ]; then
-#    echo "openstack"
-#elif [ "$CLUSTER" = "wavestack" ]; then
-#    echo "wavestack"
-#else
-#    echo "$1 is not a supported argument"
-#fi
-
 source ~/Dokumente/${CLUSTER}.sh
 
 pushd $(pwd)
