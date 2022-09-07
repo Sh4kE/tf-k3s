@@ -190,6 +190,8 @@ module "k8s-apps" {
   source = "../../k8s-apps"
 
   lb_external_ip = module.floating-ip-master-lb.floating_ip
+  sub_domain = var.sub_domain
+  root_domain = var.root_domain
 
   # providers = {
   #   kubernetes = kubernetes.kubeconfig

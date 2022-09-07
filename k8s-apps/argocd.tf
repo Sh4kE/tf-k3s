@@ -64,6 +64,9 @@ resource "kubernetes_manifest" "argocd-ingress" {
 module "argocd-apps" {
   source = "./argocd-apps"
 
+  sub_domain = var.sub_domain
+  root_domain = var.root_domain
+
   depends_on = [kubernetes_manifest.argocd-ingress]
 }
 
