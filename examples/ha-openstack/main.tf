@@ -160,22 +160,6 @@ resource "null_resource" "wait-for-k3s-external-url" {
   depends_on = [module.server1, module.load-balancer, module.floating-ip-master-lb, module.dns]
 }
 
-# resource "kubernetes_labels" "nfs-node-label" {
-#   api_version = "v1"
-#   kind        = "Node"
-#   metadata {
-#     name = "k3s-server-1"
-#     # name = "k3s-server-1-${var.sub_domain}-${replace(var.root_domain, ".", "-")}"
-#   }
-#   labels = {
-#     "nfs-backup-enabled" = "true"
-#   }
-#
-#   # provider = kubernetes.kubeconfig
-#
-#   depends_on = [null_resource.wait-for-k3s-external-url]
-# }
-
 module "k8s-helm-charts" {
   source = "../../k8s-helm-charts"
 
