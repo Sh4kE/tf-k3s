@@ -104,3 +104,7 @@ variable "router_name" {
 variable "intenal_subnet_cidr" {
   type = string
 }
+
+variable "local_subnet" {
+  type = string
+}

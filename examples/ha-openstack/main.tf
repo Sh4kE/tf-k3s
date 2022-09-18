@@ -68,6 +68,12 @@ module "server1" {
   ]
 }
 
+resource "openstack_networking_router_route_v2" "route_to_home_network_via_server1" {
+  router_id        = module.network.router.id
+  destination_cidr = var.local_subnet
+  next_hop         = module.server1.node_ip
+}
+
 module "servers" {
   source = "../../k3s-openstack"
 
