@@ -34,16 +34,3 @@ resource "kubernetes_manifest" "csi-driver-nfs-argocd-application" {
   # depends_on = [kubernetes_manifest.argocd-install, kubernetes_manifest.crd-volumesnapshotclasses, kubernetes_manifest.crd-volumesnapshotcontents, kubernetes_manifest.crd-volumesnapshots]
   depends_on = [kubernetes_manifest.argocd-install]
 }
-
-resource "kubernetes_labels" "nfs-node-label" {
-  api_version = "v1"
-  kind        = "Node"
-
-  metadata {
-    name = "k3s-server-1-${var.sub_domain}-${replace(var.root_domain, ".", "-")}"
-  }
-
-  labels = {
-    "nfs-backup-enabled" = "true"
-  }
-}
