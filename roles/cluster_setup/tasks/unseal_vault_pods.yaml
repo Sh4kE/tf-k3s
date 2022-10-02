@@ -1,0 +1,14 @@
+---
+- name: Vault Status
+  kubernetes.core.k8s_exec:
+    namespace: vault
+    pod: "vault-{{ item }}"
+    command: 'vault status -format=json'
+  register: vault_status
+  delay: 10
+  retries: 6
+  until: vault_status.rc in [0,2]
+  failed_when: not vault_status.rc in [0,2]
+
+- debug:
+    var: vault_status.stdout

@@ -67,3 +67,7 @@
 - import_tasks: cinder_csi_cloud_config.yaml
   tags:
     - "5"
+
+- import_tasks: vault_unseal.yaml
+  tags:
+    - "6"

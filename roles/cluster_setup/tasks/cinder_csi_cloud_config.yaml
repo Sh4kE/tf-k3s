@@ -1,6 +1,6 @@
 ---
 - debug:
-    var: cloud_passwords
+    var: cinder_csi_cloud_config[workspace]
 
 - name: Create new secret
   kubernetes.core.k8s:
@@ -9,11 +9,15 @@
     definition:
       apiVersion: v1
       data:
-        cloud.conf: "{{ cinder_csi_cloud_config[workspace] | to_json | b64encode }}"
+        cloud.conf: "{{ cinder_csi_cloud_config[workspace] | b64encode }}"
       kind: Secret
       metadata:
         name: cinder-csi-cloud-config
         namespace: openstack-cinder-csi
       type: Opaque
+  retries: 10
+  delay: 6
+  register: result
+  until: result.failed == false
   tags:
     - "5"
