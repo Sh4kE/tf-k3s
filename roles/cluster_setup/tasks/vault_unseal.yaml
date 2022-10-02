@@ -3,7 +3,7 @@
  # while [[ $( kubectl get sts -n vault vault -o json | jq '.status.readyReplicas' ) -ne 3 ]]; do
 
 
-- name: Vault Status
+- name: Vault Init Status
   kubernetes.core.k8s_exec:
     namespace: vault
     pod: vault-0
@@ -13,26 +13,33 @@
   retries: 6
   until: vault_status.rc in [0,2]
   failed_when: not vault_status.rc in [0,2]
+  changed_when: false
 
 - set_fact:
     vault_status_stdout: "{{ vault_status.stdout | from_json }}"
 
-- name: Vault Init
-  kubernetes.core.k8s_exec:
-    namespace: vault
-    pod: vault-0
-    command: vault operator init -key-shares=5 -key-threshold=3 -format=json
-  register: vault_init
+- block:
+    - name: Vault Init
+      kubernetes.core.k8s_exec:
+        namespace: vault
+        pod: vault-0
+        command: vault operator init -key-shares=5 -key-threshold=3 -format=json
+      register: vault_init
+
+    - set_fact:
+        vault_init_stdout: "{{ vault_init.stdout | from_json }}"
+
+    - name: Store vault unseal keys as plaintext on disk. Go steal it from here
+      ansible.builtin.copy:
+        dest: "/home/{{ username }}/.vault.{{ workspace }}.json"
+        content: "{{ vault_init_stdout }}"
+        mode: "0600"
   when: not vault_status_stdout.initialized
 
-- set_fact:
-    vault_init_stdout: "{{ vault_init.stdout | from_json }}"
-
-- name: Store vault unseal keys as plaintext on disk. Go steal it from here
-  ansible.builtin.copy:
-    dest: "/home/{{ username }}/.vault.{{ workspace }}.json"
-    content: "{{ vault_init_stdout }}"
-    mode: "0600"
+- name: load vault unseal keys from file
+  set_fact:
+    vault_init_stdout: "{{ lookup('ansible.builtin.file', '/home/' + username + '/.vault.' + workspace + '.json') | from_json }}"
+  when: vault_status_stdout.initialized
 
 - include_tasks: unseal_vault_pods.yaml
   loop:
