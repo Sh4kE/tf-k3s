@@ -1,3 +1,6 @@
 [submodule "examples/ha-openstack/k8s-projects"]
 	path = terraform/examples/ha-openstack/k8s-projects
 	url = shake@git.sh4ke.rocks:sh4ke/k8s-projects.git
+[submodule "ansible"]
+	path = ansible
+	url = shake@git.sh4ke.rocks:sh4ke/ansible-k3s.git
