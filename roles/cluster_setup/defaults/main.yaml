@@ -1,0 +1,23 @@
+---
+modules_on_stage:
+  1:
+    - module.secgroup
+    - module.network
+    - module.load-balancer
+    - module.floating-ip-master-lb
+    - module.server1
+    - 'module.servers[0]'
+    - 'module.servers[1]'
+    - 'module.agents[0]'
+    - 'module.agents[1]'
+    - module.dns
+    - data.k8sbootstrap_auth.auth
+  2:
+    - module.k8s-helm-charts
+  3:
+    - module.k8s-apps.data.kubernetes_secret.argocd-initial-admin-secret
+    - module.k8s-apps.kubernetes_manifest.argocd-vault-plugin-credentials-secret
+    - module.k8s-apps.kubernetes_manifest.argocd-ingress
+  4:
+    - module.k8s-apps.kubernetes_manifest.openstack-cinder-csi-argocd-application
+    - module.k8s-apps.kubernetes_manifest.vault-argocd-application
