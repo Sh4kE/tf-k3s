@@ -22,3 +22,7 @@ output "user_data" {
   value     = module.k3s.user_data
   sensitive = true
 }
+
+output "node_floating_ip" {
+  value = try(openstack_networking_floatingip_v2.node[0].address, null)
+}

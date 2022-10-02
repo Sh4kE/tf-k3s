@@ -4,6 +4,7 @@ provider "k8sbootstrap" {
 
 # Configure the OpenStack Provider
 provider "openstack" {
+    cloud = terraform.workspace
 }
 
 provider "kubernetes" {

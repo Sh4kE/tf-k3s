@@ -1,0 +1,138 @@
+# vim:ft=yaml.ansible
+---
+- name: Install the cloud
+  hosts: localhost
+  gather_facts: false
+  vars:
+    username: sh4ke
+    workspace: openstack
+    tld: rocks
+    subdomain: os
+    domain: "{{ subdomain + '.' + username + '.' + tld }}"
+    kubeconfig: "/home/{{ username }}/.kube/config"
+
+  tasks:
+    - name: Link the vault token
+      ansible.builtin.file:
+        path: "/home/{{ username }}/.vault-token"
+        state: link
+        src: "/home/{{ username }}/.vault-token.{{ workspace }}"
+        mode: 0600
+        owner: "{{ username }}"
+        group: "{{ username }}"
+      tags:
+        - prep
+
+    - name: Backup the existing kubectl
+      copy:
+        dest: "/home/{{ username }}/.kube/config.old"
+        src: "/home/{{ username }}/.kube/config"
+        mode: "0600"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+      tags:
+        - prep
+
+    - name: Install K3S
+      community.general.terraform:
+        project_path: terraform/examples/ha-openstack
+        workspace: "{{ workspace }}"
+        variables_files: "{{ workspace }}.tfvars"
+        targets:
+          - module.secgroup
+          - module.network
+          - module.load-balancer
+          - module.floating-ip-master-lb
+          - module.server1
+          - 'module.servers[0]'
+          - 'module.servers[1]'
+          - 'module.agents[0]'
+          - 'module.agents[1]'
+          - module.dns
+          - data.k8sbootstrap_auth.auth
+      register: tf
+      tags:
+        - "1"
+
+    - name: Update kube config
+      block:
+        - name: Read kube config as fact
+          ansible.builtin.set_fact:
+            kube_config_content: "{{ lookup('ansible.builtin.file', '{{ kubeconfig }}') | from_yaml }}"
+
+        - name: Update to kube config clusters
+          ansible.utils.update_fact:
+            updates:
+              - path: "kube_config_content.clusters[{{ index }}].cluster.certificate-authority-data"
+                value: "{{ tf.outputs.ca_crt.value | b64encode }}"
+              - path: "kube_config_content.clusters[{{ index }}].cluster.server"
+                value: "{{ tf.outputs.k3s_external_url.value }}"
+          vars:
+            index: "{{ kube_config_content.clusters | ansible.utils.index_of('eq', workspace, 'name') }}"
+          register: updated
+        - ansible.builtin.set_fact:
+            kube_config_content: "{{ updated.kube_config_content }}"
+
+        - name: Update to kube config users
+          ansible.utils.update_fact:
+            updates:
+              - path: "kube_config_content.users[{{ index }}].user.token"
+                value: "{{ tf.outputs.token.value }}"
+          vars:
+            index: "{{ kube_config_content.users | ansible.utils.index_of('eq', workspace, 'name') }}"
+          register: updated
+        - ansible.builtin.set_fact:
+            kube_config_content: "{{ updated.kube_config_content }}"
+
+        - name: Update to kube config context
+          ansible.utils.update_fact:
+            updates:
+              - path: "kube_config_content.current-context"
+                value: "{{ workspace }}"
+          register: updated
+        - set_fact:
+            kube_config_content: "{{ updated.kube_config_content }}"
+
+        - name: Write new kube config
+          ansible.builtin.copy:
+            dest: "/home/{{ username }}/.kube/config"
+            content: "{{ kube_config_content | to_nice_yaml }}"
+            mode: "0600"
+      tags:
+        - "1"
+
+    - name: Install K3S - Initial Helm Charts
+      community.general.terraform:
+        project_path: terraform/examples/ha-openstack
+        workspace: "{{ workspace }}"
+        variables_files: "{{ workspace }}.tfvars"
+        targets:
+          - module.k8s-helm-charts
+      register: tf
+      tags:
+        - "2"
+
+    - name: Install K3S - ArgoCD Supplements
+      community.general.terraform:
+        project_path: terraform/examples/ha-openstack
+        workspace: "{{ workspace }}"
+        variables_files: "{{ workspace }}.tfvars"
+        targets:
+          - module.k8s-apps.data.kubernetes_secret.argocd-initial-admin-secret
+          - module.k8s-apps.kubernetes_manifest.argocd-vault-plugin-credentials-secret
+          - module.k8s-apps.kubernetes_manifest.argocd-ingress
+      register: tf
+      tags:
+        - "3"
+
+    - name: Install K3S - ArgoCD Applications
+      community.general.terraform:
+        project_path: terraform/examples/ha-openstack
+        workspace: "{{ workspace }}"
+        variables_files: "{{ workspace }}.tfvars"
+        targets:
+          - module.k8s-apps.kubernetes_manifest.openstack-cinder-csi-argocd-application
+          - module.k8s-apps.kubernetes_manifest.vault-argocd-application
+      register: tf
+      tags:
+        - "4"

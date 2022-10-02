@@ -152,6 +152,7 @@ module "dns" {
   domain         = var.root_domain
   subdomain      = var.sub_domain
   lb_external_ip = module.floating-ip-master-lb.floating_ip
+  server1_floating_ip = module.server1.node_floating_ip
 }
 
 resource "null_resource" "wait-for-k3s-external-url" {

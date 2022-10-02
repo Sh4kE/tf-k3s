@@ -1,6 +1,7 @@
 WORKSPACE=$(terraform workspace show)
 
 # terraform destroy --var-file=$(terraform workspace show).tfvars \
+#     -target=module.dns \
 #     -target=module.server1 \
 #     -target='module.servers[0]' \
 #     -target='module.servers[1]' \

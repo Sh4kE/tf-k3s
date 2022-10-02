@@ -9,3 +9,8 @@ variable "subdomain" {
 variable "lb_external_ip" {
   type = string
 }
+
+variable "server1_floating_ip" {
+  type = string
+}
+
