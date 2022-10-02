@@ -63,3 +63,7 @@
   register: tf
   tags:
     - "4"
+
+- import_tasks: cinder_csi_cloud_config.yaml
+  tags:
+    - "5"

@@ -1,0 +1,19 @@
+---
+- debug:
+    var: cloud_passwords
+
+- name: Create new secret
+  kubernetes.core.k8s:
+    state: present
+    merge_type: merge
+    definition:
+      apiVersion: v1
+      data:
+        cloud.conf: "{{ cinder_csi_cloud_config[workspace] | to_json | b64encode }}"
+      kind: Secret
+      metadata:
+        name: cinder-csi-cloud-config
+        namespace: openstack-cinder-csi
+      type: Opaque
+  tags:
+    - "5"
