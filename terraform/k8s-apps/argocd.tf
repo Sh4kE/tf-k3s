@@ -4,40 +4,45 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-resource "kubernetes_manifest" "argocd-vault-plugin-credentials-secret" {
-  manifest = yamldecode(file("./k8s-projects/argocd/manifests/argocd-vault-plugin-credentials.yaml"))
-
-  depends_on = [kubernetes_namespace.argocd]
+resource "helm_release" "argocd" {
+    name      = "argocd"
+    chart     = "./k8s-projects/argocd"
+    namespace = "argocd"
+    values    = [
+        "${file("./k8s-projects/argocd/values.yaml")}",
+        "${file("./k8s-projects/argocd/values.${terraform.workspace}.yaml")}",
+    ]
+    atomic           = true
+    cleanup_on_fail  = true
+    create_namespace = true
+    lint             = true
+    max_history      = 5
+    timeout          = 300
+    wait             = true
+    dependency_update = true
+    depends_on = [kubernetes_namespace.argocd]
 }
 
-resource "kubernetes_manifest" "argocd-install" {
-  # Create a map { "kind--name" => yaml_doc } from the multi-document yaml text.
-  # Each element is a separate kubernetes resource.
-  # Must use \n---\n to avoid splitting on strings and comments containing "---".
-  # YAML allows "---" to be the first and last line of a file, so make sure
-  # raw yaml begins and ends with a newline.
-  # The "---" can be followed by spaces, so need to remove those too.
-  # Skip blocks that are empty or comments-only in case yaml began with a comment before "---".
-  for_each = {
-    for value in [
-      for yaml in split(
-        "\n---\n",
-        "\n${file("./k8s-projects/argocd/manifests/install.yaml")}\n"
-      ) :
-      yamldecode(yaml)
-      if trimspace(replace(yaml, "/(?m)(^[[:blank:]]*(#.*)?$)+/", "")) != ""
-    ] : "${value["kind"]}--${value["metadata"]["name"]}" => value
-  }
-  manifest = each.value
-  depends_on = [kubernetes_namespace.argocd]
+data "tls_certificate" "argocd" {
+    url = "https://argocd.${var.sub_domain}.${var.root_domain}"
+    verify_chain = false
 }
 
-resource "time_sleep" "wait_for_argocd_api" {
-  create_duration = "90s"
-  destroy_duration = "30s"
-  depends_on  = [
-    kubernetes_manifest.argocd-install,
-  ]
+resource "null_resource" "wait_for_argocd_api" {
+    triggers = {
+        wait_for_argocd_api = jsonencode(data.tls_certificate.argocd)
+    }
+    provisioner "local-exec" {
+        command = <<EOT
+        for ((i = 0; i < 60; i++)); do
+            echo | openssl s_client -connect argocd.${var.sub_domain}.${var.root_domain}:443 -quiet -verify_return_error && exit 0 || sleep 5
+        done
+        exit 1
+        EOT
+    }
+    depends_on = [
+        helm_release.argocd,
+    ]
 }
 
 data "kubernetes_secret" "argocd-initial-admin-secret" {
@@ -45,20 +50,12 @@ data "kubernetes_secret" "argocd-initial-admin-secret" {
     name = "argocd-initial-admin-secret"
     namespace = "argocd"
   }
-  depends_on = [
-    time_sleep.wait_for_argocd_api,
-  ]
+  depends_on = [ null_resource.wait_for_argocd_api ]
 }
 
 output "argocd-initial-admin-secret" {
   value = data.kubernetes_secret.argocd-initial-admin-secret
   sensitive = true
-}
-
-resource "kubernetes_manifest" "argocd-ingress" {
-  manifest = yamldecode(file("./k8s-projects/argocd/manifests/ingress-${terraform.workspace}.yaml"))
-
-  depends_on = [kubernetes_namespace.argocd]
 }
 
 module "argocd-apps" {
@@ -67,6 +64,8 @@ module "argocd-apps" {
   sub_domain = var.sub_domain
   root_domain = var.root_domain
 
-  depends_on = [kubernetes_manifest.argocd-ingress]
+  depends_on = [
+    null_resource.wait_for_argocd_api,
+  ]
 }
 

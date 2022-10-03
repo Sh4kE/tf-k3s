@@ -2,7 +2,7 @@ resource "kubernetes_manifest" "vault-argocd-application" {
   manifest = yamldecode(file("./k8s-projects/vault/application.${terraform.workspace}.yaml"))
 
   depends_on = [
-    kubernetes_manifest.argocd-install,
+    null_resource.wait_for_argocd_api,
     module.argocd-apps,
     kubernetes_manifest.openstack-cinder-csi-argocd-application
   ]

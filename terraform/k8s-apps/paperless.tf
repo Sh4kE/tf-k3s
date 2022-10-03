@@ -69,5 +69,5 @@ resource "vault_kv_secret_v2" "paperless-secrets" {
 resource "kubernetes_manifest" "paperless-argocd-application" {
   manifest = yamldecode(file("./k8s-projects/paperless/application.${terraform.workspace}.yaml"))
 
-  depends_on = [kubernetes_manifest.argocd-install, vault_kv_secret_v2.paperless-secrets]
+  depends_on = [null_resource.wait_for_argocd_api, vault_kv_secret_v2.paperless-secrets]
 }

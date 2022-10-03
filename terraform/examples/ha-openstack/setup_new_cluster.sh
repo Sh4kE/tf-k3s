@@ -1,12 +1,12 @@
 WORKSPACE=$(terraform workspace show)
 
-# terraform destroy --var-file=$(terraform workspace show).tfvars \
-#     -target=module.dns \
-#     -target=module.server1 \
-#     -target='module.servers[0]' \
-#     -target='module.servers[1]' \
-#     -target='module.agents[0]' \
-#     -target='module.agents[1]'
+terraform destroy --var-file=$(terraform workspace show).tfvars --refresh=false -auto-approve\
+    -target=module.dns \
+    -target=module.server1 \
+    -target='module.servers[0]' \
+    -target='module.servers[1]' \
+    -target='module.agents[0]' \
+    -target='module.agents[1]'
 
 terraform apply --var-file=${WORKSPACE}.tfvars -auto-approve \
     -target=module.secgroup \
@@ -35,8 +35,6 @@ terraform apply --var-file=${WORKSPACE}.tfvars -auto-approve \
 
 terraform apply --var-file=${WORKSPACE}.tfvars -auto-approve \
     -target=module.k8s-apps.data.kubernetes_secret.argocd-initial-admin-secret \
-    -target=module.k8s-apps.kubernetes_manifest.argocd-vault-plugin-credentials-secret \
-    -target=module.k8s-apps.kubernetes_manifest.argocd-ingress
 
 terraform apply --var-file=${WORKSPACE}.tfvars -auto-approve \
     -target=module.k8s-apps.kubernetes_manifest.openstack-cinder-csi-argocd-application \
